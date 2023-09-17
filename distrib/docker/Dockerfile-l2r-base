@@ -1,0 +1,46 @@
+FROM nvidia/cuda:11.0.3-runtime-ubuntu18.04
+
+################################################################### 
+# Info:                                                           #
+#    base image for l2r nodes, using ubuntu 18.04 and python 3.6  #
+#    along with a few required python packages                    #
+#                                                                 #
+# Usage:                                                          #
+#    docker build -t l2r-base:latest -f Dockerfile-l2r-base .     #
+###################################################################
+
+# Single RUN command to reduce image size
+
+RUN apt-get update --fix-missing && apt-get install -y \
+	software-properties-common \
+	locales \
+	curl \
+	vim \
+	wget \
+	sudo \
+	libglib2.0-dev \
+	ffmpeg \
+	libsm6 \ 
+	libxext6 \
+	apt-transport-https \
+    ca-certificates \
+	&& rm -rf /var/lib/apt/lists/* \
+	# Install python3
+	&& DEBIAN_FRONTEND="noninteractive" add-apt-repository --yes \
+       ppa:deadsnakes/ppa \
+    && apt-get update \
+    && DEBIAN_FRONTEND="noninteractive" \
+       apt-get install --yes \
+       python3.6-dev python3.6 python3-pip \
+    && rm /usr/bin/python3 \
+    && ln -s /usr/bin/python3.6 /usr/bin/python3 \
+    # Basic installs
+    && python3 -m pip install --upgrade --force-reinstall pip==21.0.1 \
+    && pip3 install torch==1.7.1+cu110 torchvision==0.8.2+cu110 -f https://download.pytorch.org/whl/torch_stable.html \
+    && pip3 install numpy==1.19.2 matplotlib==3.3.2 tensorboard==2.4.1 \
+    # Install docker for workers
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \
+    && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic test" \
+    && apt-get update && apt-get install -y \
+    docker-ce \
+    docker-ce-cli

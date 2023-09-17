@@ -1,0 +1,66 @@
+# ========================================================================= #
+# Filename:                                                                 #
+#    workers.yaml                                                           #
+#                                                                           #
+# Description:                                                              #
+#    Configuration for worker pods. All items with "*" will need to be      #
+#    modified for your configuration                                        #
+# ========================================================================= #
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: worker-pods
+  labels:
+    tier: worker-set
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      tier: worker-set
+  template:
+    metadata:
+      labels:
+        tier: worker-set
+    spec:
+      nodeSelector:
+        #alpha.eksctl.io/nodegroup-name: workers
+        nodetype: phortx1
+      containers:
+        - name: racing-sim
+           # * use your docker image
+          image: docker.pdl.cmu.edu/jamesher/arrival-sim
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "0"
+            - name: CUDA_VISIBLE_DEVICES
+              value: "0"
+          command:
+            - "/bin/bash"
+            - "-c"
+            - "sudo -u ubuntu ./ArrivalSim.sh"
+        - name: worker-container
+          tty: true
+          stdin: true
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "0"
+            - name: CUDA_VISIBLE_DEVICES
+              value: "0"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-key
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secret-key
+                  key: access-key
+          # * use your docker image
+          image: docker.pdl.cmu.edu/jamesher/l2r-node:latest
+          command:
+            - "/bin/bash"
+            - "-c"
+            # * replace -i with learners IP address
+            - "./run.bash -s scripts/distrib_sac.py -c configs/distrib_sac.yaml -t worker -i 192.168.38.12 -p 4444"

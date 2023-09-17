@@ -1,0 +1,53 @@
+# ========================================================================= #
+# Filename:                                                                 #
+#    multi-seed-template.yaml                                               #
+#                                                                           #
+# Description:                                                              #
+#    Template Kubernetes file for running multiple seeds using the same     #
+#    run parameters                                                         #
+# ========================================================================= #
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: worker-pods
+  labels:
+    tier: worker-set
+spec:
+  # create 2 pods that share the same GPU
+  replicas: 2
+  selector:
+    matchLabels:
+      tier: worker-set
+  template:
+    metadata:
+      labels:
+        tier: worker-set
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: phortx3 # phortx1, phortx2, phortx3
+      volumes:
+        - name: l2r-volume
+          # located at /hot/jamesher-l2r-persistent-claim-pvc-8056b5cd-ce77-4fb7-8915-9fd9ed7903b9
+          persistentVolumeClaim:
+            claimName: l2r-persistent-volume
+      containers:
+        - name: worker-container
+          tty: true
+          stdin: true
+          volumeMounts:
+            - name: l2r-volume
+              mountPath: "/mnt"
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "7" # 0-7 are valid, 8 GPU's on each phortx node
+            - name: CUDA_VISIBLE_DEVICES
+              value: "0" # do not modify
+          # * use your docker image
+          #image: docker.pdl.cmu.edu/jamesher/l2r-node:latest
+          image: docker.pdl.cmu.edu/jmf1/l2r-main:latest
+          command:
+            - "/bin/bash"
+            - "-c"
+            - "cat run.bash"
+            - "./run.bash -b sac"

@@ -1,0 +1,77 @@
+s3_kwargs:
+  # bucket and save path created automatically if they don't exist
+  bucket: 'multimodal-sac-agent'
+  save_path: '10m'
+
+rl_kwargs:
+  ac_kwargs:
+    hidden_sizes: [256, 256]
+  seed: 0
+  replay_size: 1_000_000
+  batch_size: 256
+  lr: 0.0005
+  alpha: 0.2
+  auto_alpha: False
+  alpha_lr: 0.001
+  tau: 0.01
+  gamma: 0.99
+  n_step: 1
+  start_steps: 0
+  num_updates: 0
+  encoder_path: './common/models/vae_144w_42h_32latent.pth'
+  latent_dims: 32
+  im_w: 144
+  im_h: 42
+  max_ep_len: 2048
+  collect_episodes: 1 # worker will collect N episodes to send to learner
+  epochs: 50000 # learning node will receive and learn from N batches
+  save_every: 100 # learning node saves policy every N batches
+  eval_freq: 24 # worker node will evaluate every N epochs
+  eval_episodes: 2 # number of episodes per evaluation
+  resume_path: 'epoch_100.pt' # 'epoch_1000.pt' # 'policy-baseline.pth'  # from commit b1e692f
+
+env_kwargs:
+  multimodal: True
+  max_timesteps: 2048
+  stack_num: 4
+  obs_delay: 0.1
+  not_moving_timeout: 100
+  reward_pol: 'default'
+  reward_kwargs:
+    oob_penalty: 25.0
+    min_oob_penalty: 300.0
+  controller_kwargs:
+    sim_version: 'ArrivalSim-linux-0.3.0.137341-roborace'
+    quiet: True
+    start_container: False # True
+    port: 16000
+  action_if_kwargs:
+    max_accel: 6.
+    min_accel: -6.
+    max_steer: 0.24
+    min_steer: -.24
+    ip: '0.0.0.0'
+    port: 7077
+  pose_if_kwargs:
+    ip: '0.0.0.0'
+    port: 7078
+  camera_if_kwargs:
+    ip: 'tcp://127.0.0.1'
+    port: 8008
+  logger_kwargs:
+    default: True
+
+sim_kwargs:
+  racetrack: 'VegasNorthRoad' # ['VegasNorthRoad', 'Thruxton']
+  active_sensors:
+    - ImuOxtsSensor
+    - CameraFrontRGB
+  driver_params:
+    DriverAPIClass: 'VApiUdp'
+    DriverAPI_UDP_SendAddress: '0.0.0.0'
+  camera_params:
+    Format: ColorBGR8
+    FOVAngle: 90
+    Width: 192 # 512
+    Height: 144 # 384
+    bAutoAdvertise: True

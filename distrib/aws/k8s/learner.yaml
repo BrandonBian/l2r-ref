@@ -1,0 +1,40 @@
+# ========================================================================= #
+# Filename:                                                                 #
+#    learner.yaml                                                           #
+#                                                                           #
+# Description:                                                              #
+#    Configuration for learner pod. All items with "*" will need to be      #
+#    modified for your configuration                                        #
+# ========================================================================= #
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: learner-pod
+spec:
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: learners
+  containers:
+    - name: learner-container
+      tty: true
+      stdin: true
+      resources:
+        limits:
+          nvidia.com/gpu: 1
+      # * use your docker image
+      image: 753617736767.dkr.ecr.us-east-1.amazonaws.com/l2r-node:latest
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-key
+              key: access-key
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-secret-key
+              key: access-key
+      command:
+        - /bin/bash
+        - -c
+        - ./run.bash -s scripts/distrib_sac.py -c configs/distrib_sac.yaml -t learner

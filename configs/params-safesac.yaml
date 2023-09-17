@@ -1,0 +1,100 @@
+sac_kwargs:
+    experiment_name: 'SafeSAC'
+    make_random_actions: 0
+    inference_only: False
+    record_experience: False
+    encoder_switch: 1
+    use_encoder_type: "vae_small" # | "resnet"
+    resnet:
+        backbone: "resnet18"
+        pretrained: True
+        speed_hiddens:  [32, 32]
+        hiddens: [512, 512, 512, 256, 32]
+        actor_hiddens: [512, 128, 32]
+        latent_dims: 513
+    vae:
+        vae_chkpt_statedict: '${PREFIX}/l2r/checkpoints/encoder/vae/vae-144hw-32l-thruxton.statedict'
+        vae_chkpt_pth: '${PREFIX}/l2r/checkpoints/encoder/vae/vae-144hw-32l-thruxton.pt'
+        latent_dims: 32
+    vae_small:
+        vae_chkpt_statedict: './common/models/vae_144w_42h_32latent.pth'
+        latent_dims: 32
+        hiddens: [32, 64, 64, 32, 32]
+        speed_hiddens:  [8, 8]
+        actor_hiddens: [64, 64, 32]
+        im_c: 3
+        im_w: 144
+        im_h: 42
+        ac_input_dims: 32 
+    seed: 0
+    gamma: 0.99
+    polyak: 0.995
+    lr: 0.003
+    alpha: 0.2
+    num_test_episodes: 1
+    safety_margin: 4.2
+    save_episodes: 1
+    save_freq: 1
+    total_steps: 250_000
+    replay_size: 250_000
+    batch_size: 256
+    start_steps: 2000
+    update_after: 2000
+    update_every: 1
+    eval_every: 5000
+    max_ep_len: 50000
+    im_w: 144
+    im_h: 144
+    checkpoint: 0 #'/data/l2r/results/workspaces/bingqinc/results/safesac/145/best_safesac_local_encoder-vae_small_smargin-4.2_seed-145_episode_8.statedict'
+    save_path: '${PREFIX}/l2r/results/${DIRHASH}workspaces/${USER}/results'
+    track_name: 'Thruxton'
+    safety_data: '${PREFIX}/l2r/datasets/safety_sets'
+    record_dir: '${PREFIX}/l2r/datasets/safety_records_dataset/'
+
+env_kwargs:
+    multimodal: True
+    max_timesteps: 50000
+    obs_delay: 0.1
+    not_moving_timeout: 100
+    reward_pol: 'custom'
+    reward_kwargs:
+        oob_penalty: 5.0
+        min_oob_penalty: 25.0
+    controller_kwargs:
+        sim_version: 'ArrivalSim-linux-0.3.0.137341-roborace'
+        quiet: False
+        start_container: False
+        sim_path: '/data/l2r/sims/ArrivalSim-linux-0.3.0.137341-roborace4/LinuxNoEditor'
+        user: 'ubuntu'
+    action_if_kwargs:
+        max_accel: 6.
+        min_accel: -16
+        max_steer: .3
+        min_steer: -.3
+        ip: '0.0.0.0'
+        port: 7077
+    pose_if_kwargs:
+        ip: '0.0.0.0'
+        port: 7078
+    camera_if_kwargs:
+        ip: 'tcp://127.0.0.1'
+        port: 8008
+    logger_kwargs:
+        default: True
+
+sim_kwargs:
+    racetrack: 'Thruxton'  # ['VegasNorthRoad', 'Thruxton']
+    active_sensors:
+        - ImuOxtsSensor
+        - CameraFrontRGB
+        #- ImuOxts
+        #- Camera
+    driver_params:
+        DriverAPIClass: 'VApiUdp'
+        DriverAPI_UDP_SendAddress: '0.0.0.0'
+    camera_params:
+        Format: ColorBGR8
+        FOVAngle: 90
+        Width: 192
+        Height: 144
+        bAutoAdvertise: True

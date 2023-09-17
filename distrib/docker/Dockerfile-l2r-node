@@ -1,0 +1,26 @@
+FROM docker.pdl.cmu.edu/arrival-sim:0.7.1.188691
+
+##################################################################### 
+# Info:                                                             #
+#    builds onto l2r-base image by installing requirements.txt and  #
+#    adding the l2r directory                                       #
+#                                                                   #
+# Usage:                                                            #
+#    see build.bash                                                 #
+#                                                                   #
+# Additional:                                                       #
+#    If you want the simulator inside the docker image, use the     #
+#    following command at the top of this file:                     #
+#                                                                   #
+#    FROM docker.pdl.cmu.edu/jamesher/l2r-base:latest               #
+#                                                                   #
+#####################################################################
+
+# Add files
+COPY requirements.txt l2r.tar.gz /
+
+# Install requirements
+RUN pip3 install -r requirements.txt \
+	&& tar -xzvf l2r.tar.gz && rm l2r.tar.gz
+
+WORKDIR l2r/l2r

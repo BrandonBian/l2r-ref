@@ -1,0 +1,50 @@
+# ========================================================================== #
+# Filename:                                                                  #
+#    cluster-conf.yaml                                                       #
+#                                                                            #
+# Description:                                                               #
+#    Configuration the EKS cluster, deployed with eksctl                     #
+#                                                                            #
+# Usage:                                                                     #
+#    $ eksctl create cluster cluster-conf.yaml                               #
+# ========================================================================== #
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: l2r-cluster
+  region: us-east-1
+  tags:
+    roborace: training
+
+# only necessary for us-east-1 region
+availabilityZones: ["us-east-1a","us-east-1b","us-east-1c","us-east-1d","us-east-1f"]
+
+nodeGroups:
+  - name: learners
+    desiredCapacity: 1
+    instanceType: g4dn.xlarge
+    volumeSize: 125
+    volumeType: gp2
+    ssh:
+      allow: true
+    labels:
+      node-class: learner-node
+
+  - name: workers
+    minSize: 2
+    maxSize: 12
+    desiredCapacity: 4
+    instancesDistribution: # spot instances
+      maxPrice: 0.50
+      instanceTypes: ["g4dn.2xlarge"]
+      capacityRebalance: True
+      onDemandBaseCapacity: 0
+      onDemandPercentageAboveBaseCapacity: 0
+    volumeSize: 150
+    volumeType: gp2
+    ssh:
+      allow: true
+    labels:
+      node-class: worker-node
